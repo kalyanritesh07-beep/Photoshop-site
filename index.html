@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Photoshop Designs </title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0d0d12;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #191923;
+    padding: 30px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+
+header h1 {
+    color: #a78bfa;
+    font-size: 32px;
+}
+
+header p {
+    color: #aaa;
+    margin-top: 10px;
+}
+
+.container {
+    padding: 30px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.upload-box {
+    background: #191923;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 35px;
+}
+
+input, button {
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    margin: 8px 5px 8px 0;
+}
+
+button {
+    background: #8b5cf6;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+.folder-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.folder-card {
+    background: #191923;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.folder-thumbnail {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.folder-card h3 {
+    margin: 12px 0 7px;
+    overflow-wrap: anywhere;
+}
+
+.folder-card p {
+    color: #aaa;
+    margin-bottom: 12px;
+}
+
+.preview-btn {
+    background: #2563eb;
+}
+
+.download-btn {
+    background: #16a34a;
+}
+
+.folder-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.folder-actions button {
+    flex: 1;
+    margin: 0;
+}
+
+/* Preview Section */
+
+.preview-section {
+    display: none;
+    background: #191923;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 30px;
+}
+
+.preview-section h2 {
+    color: #a78bfa;
+}
+
+.preview-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.preview-gallery img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.close-btn {
+    background: #dc2626;
+    margin-bottom: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1> Photoshop Images </h1>
+    <p> Share Your Design With Ritesh Sir </p>
+</header>
+
+<div class="container">
+
+    <div class="upload-box">
+
+        <h2>Create New Folder</h2>
+
+        <input
+            type="text"
+            id="folderName"
+            placeholder="Enter Folder Name"
+        >
+
+        <br>
+
+        <label>Select Thumbnail:</label>
+        <input
+            type="file"
+            id="thumbnail"
+            accept="image/*"
+        >
+
+        <br>
+
+        <label>Select Gallery Images:</label>
+        <input
+            type="file"
+            id="images"
+            accept="image/*"
+            multiple
+        >
+
+        <br>
+
+        <button onclick="uploadImages()">
+            Create Folder
+        </button>
+
+    </div>
+
+    <h2>My Folders</h2>
+
+    <div class="folder-gallery" id="gallery">
+    </div>
+
+    <div class="preview-section" id="previewSection">
+
+        <h2 id="previewTitle">Preview Images</h2>
+
+        <button class="close-btn" onclick="closePreview()">
+            Close Preview
+        </button>
+
+        <div class="preview-gallery" id="previewGallery">
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+
+let allFolders = [];
+
+function uploadImages() {
+
+    let files = document.getElementById("images").files;
+
+    let folderName = document.getElementById("folderName").value.trim();
+
+    let thumbnailFile = document.getElementById("thumbnail").files[0];
+
+    if (files.length === 0) {
+        alert("Please select images!");
+        return;
+    }
+
+    if (!folderName) {
+        alert("Please enter folder name!");
+        return;
+    }
+
+    if (!thumbnailFile) {
+        alert("Please select a thumbnail!");
+        return;
+    }
+
+    let folder = {
+        name: folderName,
+        files: Array.from(files),
+        thumbnail: URL.createObjectURL(thumbnailFile)
+    };
+
+    allFolders.push(folder);
+
+    let card = document.createElement("div");
+    card.className = "folder-card";
+
+    let thumbnail = document.createElement("img");
+    thumbnail.src = folder.thumbnail;
+    thumbnail.className = "folder-thumbnail";
+
+    let name = document.createElement("h3");
+    name.textContent = folderName;
+
+    let count = document.createElement("p");
+    count.textContent = files.length + " Images";
+
+    let actions = document.createElement("div");
+    actions.className = "folder-actions";
+
+    let preview = document.createElement("button");
+    preview.className = "preview-btn";
+    preview.textContent = "👁 Preview";
+
+    preview.onclick = function() {
+        previewFolder(folder);
+    };
+
+    let download = document.createElement("button");
+    download.className = "download-btn";
+    download.textContent = "⬇ Download";
+
+    download.onclick = function() {
+        downloadFolder(folder);
+    };
+
+    actions.appendChild(preview);
+    actions.appendChild(download);
+
+    card.appendChild(thumbnail);
+    card.appendChild(name);
+    card.appendChild(count);
+    card.appendChild(actions);
+
+    document.getElementById("gallery").appendChild(card);
+
+    document.getElementById("images").value = "";
+    document.getElementById("thumbnail").value = "";
+    document.getElementById("folderName").value = "";
+
+}
+
+// PREVIEW ALL IMAGES
+
+function previewFolder(folder) {
+
+    let section = document.getElementById("previewSection");
+    let gallery = document.getElementById("previewGallery");
+
+    gallery.innerHTML = "";
+
+    document.getElementById("previewTitle").textContent =
+        folder.name + " - All Images";
+
+    folder.files.forEach(file => {
+
+        let img = document.createElement("img");
+
+        img.src = URL.createObjectURL(file);
+
+        gallery.appendChild(img);
+
+    });
+
+    section.style.display = "block";
+
+    section.scrollIntoView({
+        behavior: "smooth"
+    });
+
+}
+
+// CLOSE PREVIEW
+
+function closePreview() {
+
+    document.getElementById("previewSection").style.display = "none";
+
+}
+
+// DOWNLOAD FOLDER AS ZIP
+
+async function downloadFolder(folder) {
+
+    if (typeof JSZip === "undefined") {
+        alert("ZIP library could not load. Please check your internet connection.");
+        return;
+    }
+
+    let zip = new JSZip();
+
+    let imageFolder = zip.folder(folder.name);
+
+    folder.files.forEach((file, index) => {
+
+        imageFolder.file(
+            (index + 1) + "_" + file.name,
+            file
+        );
+
+    });
+
+    let content = await zip.generateAsync({
+        type: "blob"
+    });
+
+    let url = URL.createObjectURL(content);
+
+    let link = document.createElement("a");
+
+    link.href = url;
+    link.download = folder.name + ".zip";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 2000);
+
+}
+
+</script>
+
+</body>
+</html>
